@@ -33,8 +33,15 @@ namespace Integrative.Lara
 
         public static async Task WriteBuffer(HttpContext http, byte[] buffer)
         {
-            await http.Response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length));
-            http.Response.ContentLength = buffer.Length;
+            try
+            {
+                await http.Response.Body.WriteAsync(buffer.AsMemory(0, buffer.Length));
+                http.Response.ContentLength = buffer.Length;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public static void SetStatusCode(HttpContext http, HttpStatusCode code)
@@ -140,7 +147,7 @@ namespace Integrative.Lara
             try
             {
                 await handler();
-                return true; 
+                return true;
             }
             catch (StatusCodeException e)
             {
