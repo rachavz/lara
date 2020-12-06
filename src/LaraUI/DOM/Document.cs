@@ -39,7 +39,7 @@ namespace Integrative.Lara
     /// </summary>
     public class Document
     {
-        internal IPage Page { get; }
+        public IPage Page { get; }
 
         /// <summary>
         /// Global unique identifier for the document
