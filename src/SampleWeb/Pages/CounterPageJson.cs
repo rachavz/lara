@@ -1,6 +1,7 @@
 ﻿using Integrative.Lara;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SampleWeb.Bulma;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,6 +62,8 @@ namespace SampleWeb.Pages
         public Task OnGet()
         {
             data = new CounterData2();
+
+            BulmaLoader.AppendTo(LaraUI.Page.Document.Head);
 
             RaElementFactory.CreateUI(LaraUI.Page.Document.Body, DeclareUI(), LaraUI.Page.Document.Body);
 

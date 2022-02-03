@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+
+  "libraries": [
+    {
+      "provider": "filesystem",
+      "library": "https://raw.githubusercontent.com/jgthms/bulma/master/css/bulma.css",
+      "destination": "wwwroot/lib/bulma/"
+    },
+    {
+      "provider": "filesystem",
+      "library": "https://raw.githubusercontent.com/jgthms/bulma/master/css/bulma.css.map",
+      "destination": "wwwroot/lib/bulma/"
+    },
+    {
+      "provider": "filesystem",
+      "library": "https://raw.githubusercontent.com/jgthms/bulma/master/css/bulma.min.css",
+      "destination": "wwwroot/lib/bulma/"
+    }
+  ]
+}
