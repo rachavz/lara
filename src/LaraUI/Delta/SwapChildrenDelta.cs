@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 8/2019
 Author: Pablo Carbonell
 */
@@ -30,7 +30,7 @@ namespace Integrative.Lara
             {
                 document.Enqueue(new SwapChildrenDelta
                 {
-                    ParentId = parent.EnsureElementId(),
+                    ParentId = parent.Id,
                     Index1 = index1,
                     Index2 = index2
                 });

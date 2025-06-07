@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -17,7 +17,7 @@ namespace Integrative.Lara.Tests.DOM
         [Fact]
         public void AccessKey()
         {
-            var x = new Button
+            var x = new HtmlButtonElement
             {
                 AccessKey = "1",
                 Class = "2",
@@ -66,20 +66,10 @@ namespace Integrative.Lara.Tests.DOM
         [Fact]
         public void ElementToString()
         {
-            var x = new Button();
-            Assert.Equal("button", x.ToString());
+            var x = new HtmlButtonElement();
+            Assert.Equal($"button #{x.Id}", x.ToString());
             x.Id = "hi";
             Assert.Equal("button #hi", x.ToString());
-        }
-
-        [Fact]
-        public void ClearingIdRemovesAttribute()
-        {
-            var x = Element.Create("button", "mybutton");
-            Assert.Equal(NodeType.Element, x.NodeType);
-            Assert.True(x.HasAttribute("id"));
-            x.Id = null;
-            Assert.False(x.HasAttribute("id"));
         }
 
         [Fact]
@@ -88,14 +78,6 @@ namespace Integrative.Lara.Tests.DOM
             var x = Element.Create("button");
             x.SetAttribute("ID", "x");
             Assert.Equal("x", x.Id);
-        }
-
-        [Fact]
-        public void RemoveAttributeId()
-        {
-            var x = Element.Create("span", "x");
-            x.RemoveAttribute("id");
-            Assert.True(string.IsNullOrEmpty(x.Id));            
         }
 
         [Fact]
@@ -179,7 +161,7 @@ namespace Integrative.Lara.Tests.DOM
         public void CheckedFalseFlushed()
         {
             var doc = new Document(new MyPage(), BaseModeController.DefaultKeepAliveInterval);
-            var x = new InputElement
+            var x = new HtmlInputElement
             {
                 Id = "x"
             };
@@ -199,7 +181,7 @@ namespace Integrative.Lara.Tests.DOM
         public void CheckedTrueFlushed()
         {
             var doc = new Document(new MyPage(), BaseModeController.DefaultKeepAliveInterval);
-            var x = new InputElement
+            var x = new HtmlInputElement
             {
                 Id = "x"
             };

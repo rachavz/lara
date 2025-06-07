@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -34,19 +34,6 @@ namespace Integrative.Lara.Tests.Middleware
         }
     }
 
-    internal class MyCustomErrorPage : IPage
-    {
-        public const string Text = "Custom error page";
-
-        public int Counter { get; private set; }
-
-        public Task OnGet()
-        {
-            LaraUI.Document.Body.AppendText(Text);
-            Counter++;
-            return Task.CompletedTask;
-        }
-    }
 
     public class MiddlewareTesting : DummyContextTesting
     {
@@ -231,7 +218,7 @@ namespace Integrative.Lara.Tests.Middleware
                 Socket = socket.Object,
                 DocumentInternal = document
             };
-            var button = new Button();
+            var button = new HtmlButtonElement();
             document.OpenEventQueue();
             document.Body.AppendChild(button);
             await page.Navigation.FlushPartialChanges();
@@ -641,13 +628,13 @@ namespace Integrative.Lara.Tests.Middleware
             Assert.Equal(IPAddress.Loopback, x.IPAddress);
         }
 
-        private static readonly object MyLock = new object();
+        private static readonly object _MyLock = new object();
 
         [Fact]
         [Obsolete]
         public void LaraUiDefaultStatic()
         {
-            lock (MyLock)
+            lock (_MyLock)
             {
                 LaraUI.Publish("/a", new StaticContent(Encoding.UTF8.GetBytes("hello"), "text"));
                 Assert.True(LaraUI.DefaultApplication.TryGetNode("/a", out _));
@@ -658,7 +645,7 @@ namespace Integrative.Lara.Tests.Middleware
         [Obsolete]
         public void LaraUiDefaultPage()
         {
-            lock (MyLock)
+            lock (_MyLock)
             {
                 LaraUI.Publish("/b", () => new MyPage());
                 Assert.True(LaraUI.DefaultApplication.TryGetNode("/b", out _));
@@ -671,7 +658,7 @@ namespace Integrative.Lara.Tests.Middleware
         [Obsolete]
         public void LaraUiDefaultService()
         {
-            lock (MyLock)
+            lock (_MyLock)
             {
                 LaraUI.Publish(new WebComponentOptions
                 {
@@ -709,6 +696,20 @@ namespace Integrative.Lara.Tests.Middleware
             LaraUI.InternalContext.Value = x.Object;
             Assert.Same(doc, LaraUI.Document);
             Assert.Null(LaraUI.GetContextDocument(null));
+        }
+
+        [Fact]
+        public async Task SingleComponentPageTest()
+        {
+            var x = new Mock<IPageContext>();
+            var doc = new Document(new MyPage(), 100);
+            x.Setup(x1 => x1.Document).Returns(doc);
+            LaraUI.InternalContext.Value = x.Object;
+            var page = new SingleElementPage(() => new HtmlAnchorElement());
+            await page.OnGet();
+            Assert.Equal(1, doc.Body.ChildCount);
+            var child = doc.Body.GetChildAt(0);
+            Assert.NotNull(child as HtmlAnchorElement);
         }
 
         [Fact]

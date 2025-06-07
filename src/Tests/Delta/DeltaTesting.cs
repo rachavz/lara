@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 10/2019
 Author: Pablo Carbonell
 */
@@ -50,7 +50,7 @@ namespace Integrative.Lara.Tests.Delta
             var first = q.Peek() as TextModifiedDelta;
             Assert.NotNull(first);
             Assert.Equal("test", first!.Text);
-            Assert.Equal(span.EnsureElementId(), first.ParentElementId);
+            Assert.Equal(span.Id, first.ParentElementId);
             Assert.Equal(0, first.ChildNodeIndex);
         }
 
@@ -97,7 +97,6 @@ namespace Integrative.Lara.Tests.Delta
         {
             var x = new EventSettings
             {
-                Block = true,
                 BlockOptions = new BlockOptions
                 {
                     BlockedElementId = "a",
@@ -145,6 +144,22 @@ namespace Integrative.Lara.Tests.Delta
                 Payload = "abc"
             };
             Assert.Equal("abc", x.Payload);
+        }
+
+        [Fact]
+        public void DeltaRenderClass()
+        {
+            var document = new Document(new MyPage(), 100);
+            RenderDelta.Enqueue(document, new []{document.Body});
+            var queue = document.GetQueue();
+            Assert.Single(queue);
+            var delta = queue.Peek();
+            Assert.Equal(DeltaType.Render, delta.Type);
+            var render = delta as RenderDelta;
+            Assert.NotNull(render);
+            Assert.NotNull(render?.Locator);
+            Assert.NotNull(render?.Node);
+            Assert.Equal(document.Body.Id, render?.Locator?.StartingId);
         }
     }
 }

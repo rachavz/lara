@@ -1,54 +1,71 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Integrative.Lara
 {
     internal static class ElementFactory
     {
-        private static readonly Dictionary<string, Type> Map;
+        private readonly static Dictionary<string, Func<Element>> _Creators
+            = new Dictionary<string, Func<Element>>
+            {
+                { "a", () => new HtmlAnchorElement() },
+                { "body", () => new HtmlBodyElement() },
+                { "button", () => new HtmlButtonElement() },
+                { "colgroup", () => new HtmlColGroupElement() },
+                { "div", () => new HtmlDivElement() },
+                { "h1", () => new HtmlHeadingElement(1) },
+                { "h2", () => new HtmlHeadingElement(2) },
+                { "h3", () => new HtmlHeadingElement(3) },
+                { "h4", () => new HtmlHeadingElement(4) },
+                { "h5", () => new HtmlHeadingElement(5) },
+                { "h6", () => new HtmlHeadingElement(6) },
+                { "head", () => new HtmlHeadElement() },
+                { "img", () => new HtmlImageElement() },
+                { "input", () => new HtmlInputElement() },
+                { "label", () => new HtmlLabelElement() },
+                { "link", () => new HtmlLinkElement() },
+                { "li", () => new HtmlLiElement() },
+                { "meta", () => new HtmlMetaElement() },
+                { "meter", () => new HtmlMeterElement() },
+                { "option", () => new HtmlOptionElement() },
+                { "optgroup", () => new HtmlOptionGroupElement() },
+                { "ol", () => new HtmlOlElement() },
+                { "p", () => new HtmlParagraphElement() },
+                { "script", () => new HtmlScriptElement() },
+                { "select", () => new HtmlSelectElement() },
+                { "slot", () => new Slot() },
+                { "span", () => new HtmlSpanElement() },
+                { "table", () => new HtmlTableElement() },
+                { "tbody", () => new HtmlTableSectionElement(HtmlTableSectionType.Body) },
+                { "thead", () => new HtmlTableSectionElement(HtmlTableSectionType.Head) },
+                { "tfoot", () => new HtmlTableSectionElement(HtmlTableSectionType.Foot) },
+                { "td", () => new HtmlTableCellElement() },
+                { "th", () => new HtmlTableHeaderElement() },
+            };
 
-        [SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Required behavior")]
-        static ElementFactory()
-        {
-            Map = new Dictionary<string, Type>();
-            Register<Anchor>("a");
-            Register<BodyElement>("body");
-            Register<Button>("button");
-            Register<ColGroup>("colgroup");
-            Register<HeadElement>("head");
-            Register<Image>("img");
-            Register<InputElement>("input");
-            Register<Label>("label");
-            Register<Link>("link");
-            Register<ListItem>("li");
-            Register<Meta>("meta");
-            Register<Meter>("meter");
-            Register<OptionElement>("option");
-            Register<OptionGroup>("optgroup");
-            Register<OrderedList>("ol");
-            Register<Script>("script");
-            Register<SelectElement>("select");
-            Register<Table>("table");
-            Register<TableCell>("td");
-            Register<TableHeader>("th");
-            Register<TextArea>("textarea");
-            Register<Slot>("slot");
-        }
-
-        private static void Register<T>(string lowerTagName) where T : Element
-        {
-            Map.Add(lowerTagName, typeof(T));
-        }
-
-        [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
         public static Element CreateElement(string tagName)
+        {
+            tagName = VerifyTagName(tagName);
+
+            if (_Creators.TryGetValue(tagName, out var creator))
+            {
+                return creator();
+            }
+            if (LaraUI.Context.Application.TryGetComponent(tagName, out var type))
+            {
+                return (Element)Activator.CreateInstance(type);
+            }
+
+            return new GenericElement(tagName);
+        }
+
+        private static string VerifyTagName(string tagName)
         {
             if (string.IsNullOrEmpty(tagName))
             {
@@ -59,20 +76,8 @@ namespace Integrative.Lara
             {
                 throw new ArgumentException(Resources.TagNameSpaces);
             }
-            tagName = tagName.ToLowerInvariant();
 
-            if (FindTagName(tagName, out var type))
-            {
-                return (Element)Activator.CreateInstance(type);
-            }
-
-            return new GenericElement(tagName);
-        }
-
-        private static bool FindTagName(string tagName, [NotNullWhen(true)] out Type? type)
-        {
-            return Map.TryGetValue(tagName, out type)
-                || LaraUI.TryGetComponent(tagName, out type);
+            return tagName.ToLowerInvariant();
         }
 
         public static Element CreateElement(string tagName, string id)
@@ -82,8 +87,7 @@ namespace Integrative.Lara
             return element;
         }
 
-        // ReSharper disable once InconsistentNaming
-        public static Element CreateElementNS(string ns, string tagName)
+        public static Element CreateElementNs(string ns, string tagName)
         {
             var element = CreateElement(tagName);
             element.SetAttribute("xlmns", ns);

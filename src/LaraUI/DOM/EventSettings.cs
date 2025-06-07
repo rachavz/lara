@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 6/2019
 Author: Pablo Carbonell
 */
@@ -55,12 +55,12 @@ namespace Integrative.Lara
         public int DebounceInterval { get; set; }
 
         /// <summary>
-        /// Block the UI while the event is executing?
+        /// Block UI input while the event is executing? Default is true
         /// </summary>
         /// <value>
         ///   <c>true</c> if block; otherwise, <c>false</c>.
         /// </value>
-        public bool Block { get; set; }
+        public bool Block { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the options for blocking the UI.
@@ -94,6 +94,7 @@ namespace Integrative.Lara
         /// <summary>
         /// Defines JavaScript code to execute in order to determine if the event should trigger.
         /// When this property is set, the event is trigger only if the expression evaluates to true.
+        /// Example: "event.keyCode === 13"
         /// </summary>
         public string? EvalFilter { get; set; }
 

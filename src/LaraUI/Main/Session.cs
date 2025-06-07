@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 6/2019
 Author: Pablo Carbonell
 */
@@ -27,7 +27,6 @@ namespace Integrative.Lara
             _parent = parent;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Cannot crash")]
         internal void Close()
         {
             var args = new EventArgs();

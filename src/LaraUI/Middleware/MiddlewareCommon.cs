@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -107,7 +107,6 @@ namespace Integrative.Lara
             return ProcessWebSocketMessage<T>(maxSize, ms, result);
         }
 
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Cannot crash")]
         internal static (bool, T?) ProcessWebSocketMessage<T>(int maxSize,
             MemoryStream ms, WebSocketReceiveResult result) where T : class
         {

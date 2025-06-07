@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -53,13 +53,14 @@ namespace Integrative.Lara.Tests.DOM
             var element = Element.Create("span");
             element.Hidden = true;
             Assert.True(element.HasAttribute("hidden"));
-            Assert.Null(element.GetAttribute("hidden"));
+            Assert.Equal("", element.GetAttribute("hidden"));
             var count = 0;
             foreach (var pair in element.Attributes)
             {
+                if (pair.Key == "id") continue;
                 count++;
                 Assert.Equal("hidden", pair.Key);
-                Assert.Null(pair.Value);
+                Assert.Equal("", pair.Value);
             }
             Assert.Equal(1, count);
             element.Hidden = false;
@@ -97,7 +98,7 @@ namespace Integrative.Lara.Tests.DOM
         [Fact]
         public void NotifySelectedSetsSelected()
         {
-            var option = new OptionElement();
+            var option = new HtmlOptionElement();
             option.NotifyValue(new ElementEventValue
             {
                 Checked = true,
@@ -181,7 +182,7 @@ namespace Integrative.Lara.Tests.DOM
         [Fact]
         public void NotifyFlagSkipsSameValue()
         {
-            var input = new InputElement
+            var input = new HtmlInputElement
             {
                 Checked = true
             };
@@ -192,7 +193,7 @@ namespace Integrative.Lara.Tests.DOM
         [Fact]
         public void NotifyValueSkipsSameValue()
         {
-            var input = new InputElement
+            var input = new HtmlInputElement
             {
                 Value = "hello"
             };
@@ -210,7 +211,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
-        [Obsolete]
+        [Obsolete("Old methods")]
         public void SetInnerText()
         {
             var x = Element.Create("div");
@@ -256,7 +257,7 @@ namespace Integrative.Lara.Tests.DOM
         {
             var file = new Mock<IFormFile>();
             file.Setup(x1 => x1.Name).Returns("abc");
-            var x = new InputElement
+            var x = new HtmlInputElement
             {
                 Type = "file"
             };

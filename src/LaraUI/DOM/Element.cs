@@ -1,14 +1,16 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,7 +27,7 @@ namespace Integrative.Lara
 
         internal Dictionary<string, EventSettings> Events { get; }
 
-        private string? _id;
+        private string _id;
 
         /// <summary>
         /// Element's tag name
@@ -57,16 +59,42 @@ namespace Integrative.Lara
         /// <param name="tagName">Element's tag name.</param>
         /// <returns>Element created</returns>
         // ReSharper disable once InconsistentNaming
-        public static Element CreateNS(string ns, string tagName) => ElementFactory.CreateElementNS(ns, tagName);
+        public static Element CreateNS(string ns, string tagName) => ElementFactory.CreateElementNs(ns, tagName);
 
-        [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
-        internal Element(string tagName)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="tagName">element tag</param>
+        protected Element(string tagName)
         {
-            tagName = tagName ?? throw new ArgumentNullException(nameof(tagName));
+            if (string.IsNullOrWhiteSpace(tagName))
+            {
+                tagName = GetDefaultTagName(GetType());
+            }
+            TagName = tagName.ToLowerInvariant();
+            _id = GlobalSerializer.GenerateElementId();
             _attributes = new Attributes(this);
             _children = new List<Node>();
             Events = new Dictionary<string, EventSettings>();
-            TagName = tagName.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        protected Element() : this("")
+        {
+        }
+
+        /// <summary>
+        /// Returns a default/suggested tag name for a type
+        /// </summary>
+        /// <param name="type">object type</param>
+        /// <returns>default/suggested tag name</returns>
+        public static string GetDefaultTagName(Type type)
+        {
+            var name = type.FullName ?? throw new ArgumentException("Invalid type name");
+            var tail = name.Replace('.', '-').ToLowerInvariant();
+            return $"x-{tail}";
         }
 
         /// <summary>
@@ -76,18 +104,6 @@ namespace Integrative.Lara
         /// The type of the node.
         /// </value>
         public sealed override NodeType NodeType => NodeType.Element;
-
-        internal bool NeedsId => GetNeedsId();
-
-        private bool GetNeedsId()
-        {
-            if (!string.IsNullOrEmpty(_id))
-            {
-                return false;
-            }
-
-            return Events.Count > 0 || HtmlReference.RequiresId(TagName);
-        }
 
         /// <summary>
         /// Converts to string.
@@ -109,6 +125,14 @@ namespace Integrative.Lara
             return string.IsNullOrEmpty(_id) ? TagName : $"{TagName} #{_id}{suffix}";
         }
 
+        /// <summary>
+        /// Returns the ID by assigning one if needed
+        /// </summary>
+        /// <returns></returns>
+        [Obsolete("Not needed anymore")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public string EnsureElementId() => Id;
+
         #region Attributes
 
         /// <summary>
@@ -117,7 +141,7 @@ namespace Integrative.Lara
         /// <value>
         /// The identifier.
         /// </value>
-        public string? Id
+        public string Id
         {
             get => _id;
             set
@@ -126,35 +150,14 @@ namespace Integrative.Lara
                 {
                     return;
                 }
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new InvalidOperationException("Element IDs cannot be empty");
+                }
                 Document?.NotifyChangeId(this, _id, value);
-                if (value is null)
-                {
-                    _attributes.RemoveAttributeLower("id");
-                }
-                else
-                {
-                    _attributes.SetAttributeLower("id", value);
-                }
+                _attributes.SetAttributeLower("id", value);
                 _id = value;
             }
-        }
-
-        /// <summary>
-        /// Returns the element's identifier, generating an ID if currently blank.
-        /// </summary>
-        /// <returns>Element's ID</returns>
-        public string EnsureElementId()
-        {
-            if (string.IsNullOrEmpty(Id))
-            {
-                Id = GenerateElementId();
-            }
-            return Id;
-        }
-
-        private string GenerateElementId()
-        {
-            return Document == null ? GlobalSerializer.GenerateElementId() : Document.GenerateElementId();
         }
 
         /// <summary>
@@ -162,7 +165,6 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="attributeName">The name of the attribute.</param>
         /// <param name="attributeValue">The value of the attribute.</param>
-        [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
         public void SetAttribute(string attributeName, string? attributeValue)
         {
             attributeName = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
@@ -173,11 +175,27 @@ namespace Integrative.Lara
         {
             if (nameLower == "id")
             {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Element IDs cannot be empty");
+                }
                 Id = value;
             }
             else
             {
                 _attributes.SetAttributeLower(nameLower, value);
+            }
+        }
+
+        internal void ToggleAttributeLower(string nameLower, bool value)
+        {
+            if (value)
+            {
+                SetAttributeLower(nameLower, "");
+            }
+            else
+            {
+                RemoveAttribute(nameLower);
             }
         }
 
@@ -216,7 +234,6 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="attributeName">Attribute's name</param>
         /// <param name="value">true to add, false to remove</param>
-        [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
         public void SetFlagAttribute(string attributeName, bool value)
         {
             attributeName = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
@@ -230,19 +247,16 @@ namespace Integrative.Lara
         /// Removes an attribute.
         /// </summary>
         /// <param name="attributeName">The name of the attribute.</param>
-        [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
         public void RemoveAttribute(string attributeName)
         {
             attributeName = attributeName ?? throw new ArgumentNullException(nameof(attributeName));
             attributeName = attributeName.ToLowerInvariant();
             if (attributeName == "id")
             {
-                Id = null;
+                throw new InvalidOperationException("Cannot remove element ID attribute");
             }
-            else
-            {
-                _attributes.RemoveAttributeLower(attributeName);
-            }
+
+            _attributes.RemoveAttributeLower(attributeName);
         }
 
         internal int? GetIntAttribute(string nameLower)
@@ -327,7 +341,7 @@ namespace Integrative.Lara
         /// <value>
         /// The access key.
         /// </value>
-        public string? AccessKey
+        public virtual string? AccessKey
         {
             get => GetAttributeLower("accesskey");
             set => SetAttributeLower("accesskey", value);
@@ -340,7 +354,7 @@ namespace Integrative.Lara
         /// The automatic capitalize.
         /// </value>
         // ReSharper disable once UnusedMember.Global
-        public string? AutoCapitalize
+        public virtual string? AutoCapitalize
         {
             get => GetAttributeLower("autocapitalize");
             set => SetAttributeLower("autocapitalize", value);
@@ -352,7 +366,7 @@ namespace Integrative.Lara
         /// <value>
         /// The class.
         /// </value>
-        public string? Class
+        public virtual string? Class
         {
             get => GetAttributeLower("class");
             set => SetAttributeLower("class", value);
@@ -364,7 +378,7 @@ namespace Integrative.Lara
         /// <value>
         /// The content editable.
         /// </value>
-        public string? ContentEditable
+        public virtual string? ContentEditable
         {
             get => GetAttributeLower("contenteditable");
             set => SetAttributeLower("contenteditable", value);
@@ -377,7 +391,7 @@ namespace Integrative.Lara
         /// The context menu.
         /// </value>
         // ReSharper disable once UnusedMember.Global
-        public string? ContextMenu
+        public virtual string? ContextMenu
         {
             get => GetAttributeLower("contextmenu");
             set => SetAttributeLower("contextmenu", value);
@@ -389,7 +403,7 @@ namespace Integrative.Lara
         /// <value>
         /// The dir.
         /// </value>
-        public string? Dir
+        public virtual string? Dir
         {
             get => GetAttributeLower("dir");
             set => SetAttributeLower("dir", value);
@@ -401,7 +415,7 @@ namespace Integrative.Lara
         /// <value>
         /// The draggable.
         /// </value>
-        public string? Draggable
+        public virtual string? Draggable
         {
             get => GetAttributeLower("draggable");
             set => SetAttributeLower("draggable", value);
@@ -413,7 +427,7 @@ namespace Integrative.Lara
         /// <value>
         /// The drop zone.
         /// </value>
-        public string? DropZone
+        public virtual string? DropZone
         {
             get => GetAttributeLower("dropzone");
             set => SetAttributeLower("dropzone", value);
@@ -425,7 +439,7 @@ namespace Integrative.Lara
         /// <value>
         ///   <c>true</c> if hidden; otherwise, <c>false</c>.
         /// </value>
-        public bool Hidden
+        public virtual bool Hidden
         {
             get => HasAttributeLower("hidden");
             set => SetFlagAttributeLower("hidden", value);
@@ -438,7 +452,7 @@ namespace Integrative.Lara
         ///   <c>true</c> if [input mode]; otherwise, <c>false</c>.
         /// </value>
         // ReSharper disable once UnusedMember.Global
-        public bool InputMode
+        public virtual bool InputMode
         {
             get => HasAttributeLower("inputmode");
             set => SetFlagAttributeLower("inputmode", value);
@@ -450,7 +464,7 @@ namespace Integrative.Lara
         /// <value>
         /// The language.
         /// </value>
-        public string? Lang
+        public virtual string? Lang
         {
             get => GetAttributeLower("lang");
             set => SetAttributeLower("lang", value);
@@ -462,7 +476,7 @@ namespace Integrative.Lara
         /// <value>
         /// The spellcheck.
         /// </value>
-        public string? Spellcheck
+        public virtual string? Spellcheck
         {
             get => GetAttributeLower("spellcheck");
             set => SetAttributeLower("spellcheck", value);
@@ -474,7 +488,7 @@ namespace Integrative.Lara
         /// <value>
         /// The style.
         /// </value>
-        public string? Style
+        public virtual string? Style
         {
             get => GetAttributeLower("style");
             set => SetAttributeLower("style", value);
@@ -486,7 +500,7 @@ namespace Integrative.Lara
         /// <value>
         /// The index of the tab.
         /// </value>
-        public string? TabIndex
+        public virtual string? TabIndex
         {
             get => GetAttributeLower("tabindex");
             set => SetAttributeLower("tabindex", value);
@@ -498,7 +512,7 @@ namespace Integrative.Lara
         /// <value>
         /// The title.
         /// </value>
-        public string? Title
+        public virtual string? Title
         {
             get => GetAttributeLower("title");
             set => SetAttributeLower("title", value);
@@ -510,7 +524,7 @@ namespace Integrative.Lara
         /// <value>
         /// The translate.
         /// </value>
-        public string? Translate
+        public virtual string? Translate
         {
             get => GetAttributeLower("translate");
             set => SetAttributeLower("translate", value);
@@ -521,12 +535,24 @@ namespace Integrative.Lara
         #region DOM tree queries
 
         /// <summary>
-        /// Gets the children.
+        /// Element's child nodes
         /// </summary>
         /// <value>
         /// The children.
         /// </value>
-        public IEnumerable<Node> Children => _children;
+        public IEnumerable<Node> Children
+        {
+            get => _children;
+            set
+            {
+                if (_children.Equals(value)) return;
+                var list = value.ToArray();
+                BeginUpdate();
+                ClearChildren();
+                AppendChild(list);
+                EndUpdate();
+            }
+        }
 
         /// <summary>
         /// Returns the number of child nodes.
@@ -590,7 +616,7 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="element">The element that may be a parent.</param>
         /// <returns>True if the current element descends from the given element.</returns>
-        public bool DescendsFrom(Element element)
+        public bool DescendsFrom(Element? element)
         {
             if (this == element)
             {
@@ -638,12 +664,17 @@ namespace Integrative.Lara
         /// <summary>
         /// Appends a child node.
         /// </summary>
-        /// <param name="node">The node to append.</param>
-        public void AppendChild(Node node)
+        /// <param name="nodes">The node to append.</param>
+        public void AppendChild(params Node[] nodes)
         {
+            BeginUpdate();
             var append = new DomSurgeon(this);
-            append.Append(node);
-            OnChildAdded(node);
+            foreach (var node in nodes)
+            {
+                append.Append(node);
+                OnChildAdded(node);
+            }
+            EndUpdate();
         }
 
         /// <summary>
@@ -742,6 +773,7 @@ namespace Integrative.Lara
         {
             var remover = new DomSurgeon(this);
             remover.ClearChildren();
+            OnPropertyChanged(nameof(Children));
         }
 
         /// <summary>
@@ -780,6 +812,7 @@ namespace Integrative.Lara
 
         private protected virtual void OnChildAdded(Node child)
         {
+            OnPropertyChanged(nameof(Children));
         }
 
         /// <summary>
@@ -864,18 +897,37 @@ namespace Integrative.Lara
 
         internal override ContentNode GetContentNode()
         {
+            if (!Render)
+            {
+                return GetUnrenderedContent();
+            }
+            return GetRenderedContent();
+        }
+
+        private ContentNode GetUnrenderedContent()
+        {
+            if (IsPrintable && IsSlotted)
+            {
+                return new ContentPlaceholder(Id);
+            }
+            else
+            {
+                return new ContentArrayNode { Nodes = new List<ContentNode>() };
+            }
+        }
+
+        private ContentNode GetRenderedContent()
+        {
             var list = new List<Node>(GetLightSlotted());
             if (list.Count == 1 && list[0] == this)
             {
-                return new ContentElementNode
-                {
-                    TagName = TagName,
-                    NS = GetAttributeLower("xlmns"),
-                    Attributes = CopyAttributes(),
-                    Children = CopyLightChildren()
-                };
+                return GetElementContent();
             }
+            return GetArrayContent(list);
+        }
 
+        private ContentNode GetArrayContent(List<Node> list)
+        {
             var array = new ContentArrayNode
             {
                 Nodes = new List<ContentNode>()
@@ -885,6 +937,17 @@ namespace Integrative.Lara
                 array.Nodes.Add(node.GetContentNode());
             }
             return array;
+        }
+
+        private ContentElementNode GetElementContent()
+        {
+            return new ContentElementNode
+            {
+                TagName = TagName,
+                NS = GetAttributeLower("xlmns"),
+                Attributes = CopyAttributes(),
+                Children = CopyLightChildren()
+            };
         }
 
         private List<ContentAttribute> CopyAttributes()
@@ -963,13 +1026,39 @@ namespace Integrative.Lara
             }
         }
 
+        /// <summary>
+        /// Registers an event and associates code to execute.
+        /// </summary>
+        /// <param name="eventName">Name of the event.</param>
+        /// <param name="handler">The handler to execute.</param>
+        public void On(string eventName, Action? handler)
+        {
+            eventName = eventName ?? throw new ArgumentNullException(nameof(eventName));
+            if (handler == null)
+            {
+                RemoveEvent(eventName);
+            }
+            else
+            {
+                On(new EventSettings
+                {
+                    EventName = eventName,
+                    Handler = () =>
+                    {
+                        handler();
+                        return Task.CompletedTask;
+                    }
+                });
+            }
+        }
+
         private void RemoveEvent(string eventName)
         {
             if (!Events.ContainsKey(eventName)) return;
             Events.Remove(eventName);
             Document?.Enqueue(new UnsubscribeDelta
             {
-                ElementId = EnsureElementId(),
+                ElementId = Id,
                 EventName = eventName
             });
         }
@@ -986,185 +1075,46 @@ namespace Integrative.Lara
 
         #region Binding
 
-        private ElementBindings? _bindings;
+        private HashSet<BindingSubscription>? _subscriptions;
 
-        private ElementBindings EnsureBindings()
-        {
-            return _bindings ??= new ElementBindings(this);
-        }
+        private ChildrenBindingSubscription? _childrenBinding;
 
-        /// <summary>
-        /// Binds an element to an action to be triggered whenever the source data changes
-        /// </summary>
-        /// <typeparam name="T">Type of the source data</typeparam>
-        /// <param name="instance">Source data instance</param>
-        /// <param name="handler">Action to execute when source data is modified</param>
-        public void Bind<T>(T instance, Action<T, Element> handler)
-            where T : class, INotifyPropertyChanged
+        private int _applyingBinding;
+        private const int MaxApplyLevel = 5;
+
+        internal void AddSubscription(INotifyPropertyChanged source, Action action)
         {
-            EnsureBindings().BindHandler(new BindHandlerOptions<T>
+            _subscriptions ??= new HashSet<BindingSubscription>();
+            action();
+            _subscriptions.Add(new BindingSubscription(source, (_, _) =>
             {
-                BindObject = instance,
-                ModifiedHandler = handler
-            });
+                if (_applyingBinding > MaxApplyLevel)
+                {
+                    throw new InvalidOperationException("Cycle detected when applying updates on bindings");
+                }
+                _applyingBinding++;
+                action();
+                _applyingBinding--;
+            }));
         }
 
-        /// <summary>
-        /// Binds an element to an action to be triggered whenever the source data changes
-        /// </summary>
-        /// <typeparam name="T">Type of the source data</typeparam>
-        /// <param name="options">Binding options</param>
-        public void Bind<T>(BindHandlerOptions<T> options)
-            where T : class, INotifyPropertyChanged
+        internal void SubscribeChildren(
+            INotifyCollectionChanged source,
+            NotifyCollectionChangedEventHandler handler)
         {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureBindings().BindHandler(options);
+            _childrenBinding?.Unsubscribe();
+            _childrenBinding = new ChildrenBindingSubscription(handler, source);
         }
 
-        /// <summary>
-        /// Binds an attribute
-        /// </summary>
-        /// <typeparam name="T">Data type for data source instance</typeparam>
-        /// <param name="options">Attribute binding options</param>
-        public void BindAttribute<T>(BindAttributeOptions<T> options)
-            where T : class, INotifyPropertyChanged
+        private void ClearSubscriptions()
         {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureBindings().BindAttribute(options);
-        }
-
-        /// <summary>
-        /// Binds a flag attribute
-        /// </summary>
-        /// <typeparam name="T">Data type for data source instance</typeparam>
-        /// <param name="options">Binding options</param>
-        [Obsolete("Use BindToggleAttribute() instead.")]
-        public void BindFlagAttribute<T>(BindFlagAttributeOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            BindToggleAttribute(options);
-        }
-
-        /// <summary>
-        /// Binds a flag attribute
-        /// </summary>
-        /// <typeparam name="T">Data type for data source instance</typeparam>
-        /// <param name="options">Binding options</param>
-        public void BindToggleAttribute<T>(BindFlagAttributeOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureBindings().BindFlagAttribute(options);
-        }
-
-        /// <summary>
-        /// Bindings to toggle an element class
-        /// </summary>
-        /// <typeparam name="T">Data type for data source instance</typeparam>
-        /// <param name="options">Binding options</param>
-        public void BindToggleClass<T>(BindToggleClassOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureBindings().BindToggleClass(options);
-        }
-
-        /// <summary>
-        /// Two-way bindings for element attributes (e.g. 'value' attribute populated by user)
-        /// </summary>
-        /// <typeparam name="T">Source data type</typeparam>
-        /// <param name="options">Binding options</param>
-        public void BindInput<T>(BindInputOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureElementId();
-            EnsureBindings().BindInput(options);
-        }
-
-        /// <summary>
-        /// Two-way bindings for element flag attributes (e.g. 'checked' attribute populated by user)
-        /// </summary>
-        /// <typeparam name="T">Source data type</typeparam>
-        /// <param name="options">Binding options</param>
-        // ReSharper disable once VirtualMemberNeverOverridden.Global
-        public virtual void BindFlagInput<T>(BindFlagInputOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureElementId();
-            EnsureBindings().BindInput(options);
-        }
-
-        /// <summary>
-        /// Removes bindings for an attribute
-        /// </summary>
-        /// <param name="attribute">Attribute to remove bindings of</param>
-        public void UnbindAttribute(string attribute)
-        {
-            _bindings?.UnbindAttribute(attribute);
-        }
-
-        /// <summary>
-        /// Binds an element's inner text
-        /// </summary>
-        /// <typeparam name="T">Type of source data</typeparam>
-        /// <param name="options">Inner text binding options</param>
-        public void BindInnerText<T>(BindInnerTextOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            EnsureBindings().BindInnerText(options);
-        }
-
-        /// <summary>
-        /// Removes inner text bindings
-        /// </summary>
-        public void UnbindInnerText()
-        {
-            EnsureBindings().UnbindInnerText();
-        }
-
-        /// <summary>
-        /// Removes bindings for the generic handler
-        /// </summary>
-        public void UnbindHandler()
-        {
-            _bindings?.UnbindHandler();
-        }
-
-        /// <summary>
-        /// Removes bindings for any attributes
-        /// </summary>
-        public void UnbindAttributes()
-        {
-            _bindings?.UnbindAllAttributes();
-        }
-
-        /// <summary>
-        /// Binds the list of children to an observable collection
-        /// </summary>
-        /// <typeparam name="T">Type for items in the collection</typeparam>
-        /// <param name="options">Children binding options</param>
-        public void BindChildren<T>(BindChildrenOptions<T> options)
-            where T : class, INotifyPropertyChanged
-        {
-            options = options ?? throw new ArgumentNullException(nameof(options));
-            options.Verify();
-            EnsureBindings().BindChildren(options);
-        }
-
-        /// <summary>
-        /// Removes all bindings for the list of children
-        /// </summary>
-        public void UnbindChildren()
-        {
-            _bindings?.UnbindChildren();
+            _childrenBinding?.Unsubscribe();
+            if (_subscriptions == null) return;
+            foreach (var item in _subscriptions)
+            {
+                item.Unsubscribe();
+            }
+            _subscriptions.Clear();
         }
 
         /// <summary>
@@ -1172,17 +1122,7 @@ namespace Integrative.Lara
         /// </summary>
         public void UnbindAll()
         {
-            _bindings?.UnbindAll();
-        }
-
-        /// <summary>
-        /// Clears all child nodes and replaces them with a single text node
-        /// </summary>
-        /// <param name="text">Text for the node</param>
-        [Obsolete("Use InnerText property instead.")]
-        public void SetInnerText(string text)
-        {
-            SetInnerEncode(text, true);
+            ClearSubscriptions();
         }
 
         /// <summary>
@@ -1247,6 +1187,31 @@ namespace Integrative.Lara
 
         #region Component-related
 
+        private bool _render = true;
+
+        /// <summary>
+        /// Set to false to prevent the element from rendering on the client's document
+        /// </summary>
+        public bool Render
+        {
+            get => _render;
+            set
+            {
+                if (value == _render) return;
+                SetProperty(ref _render, value);
+                if (Document == null || !IsSlotted) return;
+                var light = GetLightSlotted();
+                if (_render)
+                {
+                    RenderDelta.Enqueue(Document, light);
+                }
+                else
+                {
+                    UnRenderDelta.Enqueue(Document, light);
+                }
+            }
+        }
+
         internal virtual IEnumerable<Node> GetLightSlotted()
         {
             yield return this;
@@ -1277,18 +1242,14 @@ namespace Integrative.Lara
 
         internal virtual void AttributeChanged(string attribute, string? value)
         {
-            _bindings?.NotifyAttributeChanged(attribute);
+            OnPropertyChanged(attribute);
         }
-
-        /*internal bool QueueOpen =>
-            AcceptsEvents
-            && Document.QueueingEvents;*/
 
         internal bool TryGetQueue([NotNullWhen(true)] out Document? document)
         {
             return TryGetEvents(out document)
-                && Document != null
-                && Document.QueueingEvents;
+                && document != null
+                && document.QueueingEvents;
         }
 
         internal bool TryGetEvents([NotNullWhen(true)] out Document? document)
@@ -1297,9 +1258,9 @@ namespace Integrative.Lara
             return document != null
                    && IsSlotted
                    && IsPrintable
-                   && Document != null;
+                   && Render;
         }
-        
+
         #endregion
 
         #region Other methods

@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 8/2019
 Author: Pablo Carbonell
 */
@@ -26,6 +26,13 @@ namespace Integrative.Lara
         public LaraWebComponentAttribute(string customTagName)
         {
             ComponentTagName = customTagName;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public LaraWebComponentAttribute() : this("")
+        {
         }
     }
 }

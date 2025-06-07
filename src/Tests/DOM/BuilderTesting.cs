@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 6/2019
 Author: Pablo Carbonell
 */
@@ -17,19 +17,21 @@ namespace Integrative.Lara.Tests.DOM
     public class BuilderTesting : DummyContextTesting
     {
         [Fact]
+        [Obsolete("Old methods")]
         public void PushAdds()
         {
             var root = Element.Create("div");
             var builder = new LaraBuilder(root);
             builder.Push("button", "red", "mybutton").Pop();
             Assert.NotEmpty(root.Children);
-            var first = root.Children.FirstOrDefault() as Button;
+            var first = root.Children.FirstOrDefault() as HtmlButtonElement;
             Assert.NotNull(first);
             Assert.Equal("red", first!.Class);
             Assert.Equal("mybutton", first.Id);
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void TooManyPops()
         {
             var root = Element.Create("div");
@@ -39,6 +41,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void AddSiblings()
         {
             var root = Element.Create("div");
@@ -49,6 +52,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void AddTextNodeEncodes()
         {
             var root = Element.Create("div");
@@ -60,34 +64,37 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void AddElements()
         {
             var root = Element.Create("div");
             var builder = new LaraBuilder(root);
             var list = new List<Element>()
             {
-                new Button(),
-                new OptionElement()
+                new HtmlButtonElement(),
+                new HtmlOptionElement()
             };
             builder.AddNodes(list);
             Assert.Equal(2, root.ChildCount);
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void AddNodes()
         {
             var root = Element.Create("div");
             var builder = new LaraBuilder(root);
             var list = new List<Node>()
             {
-                new Button(),
-                new OptionElement()
+                new HtmlButtonElement(),
+                new HtmlOptionElement()
             };
             builder.AddNodes(list);
             Assert.Equal(2, root.ChildCount);
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void AddAction()
         {
             var root = Element.Create("div");
@@ -96,12 +103,14 @@ namespace Integrative.Lara.Tests.DOM
             Assert.Equal(1, root.ChildCount);
         }
 
+        [Obsolete("Old methods")]
         private static void MyAddAction(LaraBuilder builder)
         {
-            builder.AddNode(new Button());
+            builder.AddNode(new HtmlButtonElement());
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void SetAttribute()
         {
             var root = Element.Create("div");
@@ -111,6 +120,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void SetFlag()
         {
             var root = Element.Create("div");
@@ -120,6 +130,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public async void OnEvent()
         {
             var executed = false;
@@ -134,16 +145,12 @@ namespace Integrative.Lara.Tests.DOM
                     return Task.CompletedTask;
                 }
             });
-            /*var connection = new Connection(Guid.NewGuid(), IPAddress.Loopback);
-            var http = new Mock<HttpContext>();
-            var mock = new Mock<IPage>();
-            var context = new PageContext(_context.Application,
-                http.Object, connection);*/
             await root.NotifyEvent("click");
             Assert.True(executed);
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public async void OnEventSimple()
         {
             var executed = false;
@@ -154,15 +161,12 @@ namespace Integrative.Lara.Tests.DOM
                 executed = true;
                 return Task.CompletedTask;
             });
-            //var http = new Mock<HttpContext>();
-            //var page = new Mock<IPage>();
-            //var connection = new Connection(Guid.NewGuid(), IPAddress.Loopback);
-            //var context = new PageContext(_context.Application, http.Object, connection);
             await root.NotifyEvent("click");
             Assert.True(executed);
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void PushClassName()
         {
             var root = Element.Create("div");
@@ -175,6 +179,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         // ReSharper disable once InconsistentNaming
         public void PushNS()
         {
@@ -188,6 +193,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("Old methods")]
         public void PushElementClass()
         {
             var root = Element.Create("root");

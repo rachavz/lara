@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 11/2019
 Author: Pablo Carbonell
 */
@@ -13,7 +13,7 @@ namespace Integrative.Lara
     internal sealed class BinaryServicePublished : IPublishedItem
     {
         public Func<IBinaryService> Factory { get; }
-        public string ContentType { get; }
+        private string ContentType { get; }
 
         public BinaryServicePublished(BinaryServiceContent content)
         {

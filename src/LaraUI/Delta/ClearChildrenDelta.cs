@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 6/2019
 Author: Pablo Carbonell
 */
@@ -24,7 +24,7 @@ namespace Integrative.Lara
             {
                 document.Enqueue(new ClearChildrenDelta
                 {
-                    ElementId = element.EnsureElementId(),
+                    ElementId = element.Id,
                 });
             }
         }

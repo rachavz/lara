@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 7/2019
 Author: Pablo Carbonell
 */
@@ -113,9 +113,12 @@ namespace Integrative.Lara
             foreach (LaraWebComponentAttribute entry in components)
             {
                 VerifyType(type, "LaraWebComponent", typeof(WebComponent));
+                var tagName = string.IsNullOrEmpty(entry.ComponentTagName)
+                    ? Element.GetDefaultTagName(type)
+                    : entry.ComponentTagName;
                 app.PublishComponent(new WebComponentOptions
                 {
-                    ComponentTagName = entry.ComponentTagName,
+                    ComponentTagName = tagName,
                     ComponentType = type
                 });
             }

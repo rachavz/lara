@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-extra-semi */
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-undef */
+/* eslint-disable prettier/prettier */
 /*!
  * jQuery blockUI plugin
  * Version 2.70.0-2014.11.23
@@ -11,8 +16,6 @@
  *
  * Thanks to Amir-Hossein Sobhi for some excellent contributions!
  */
-
-import { setTimeout } from "timers";
 
 ; (function () {
     /*jshint eqeqeq:false curly:false latedef:false */

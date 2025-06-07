@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -18,11 +18,11 @@ namespace Integrative.Lara
     internal sealed class PostEventHandler : BaseHandler
     {
         public const string EventPrefix = "/_event";
-        public const string AjaxMethod = "POST";
-        public const int MaxSizeBytes = 1024000;
+        private const string AjaxMethod = "POST";
+        private const int MaxSizeBytes = 1024000;
 
         public static event EventHandler? EventComplete;
-        private static readonly EventArgs EventArgs = new EventArgs();
+        private static readonly EventArgs _EventArgs = new EventArgs();
 
         private readonly Application _app;
 
@@ -218,7 +218,7 @@ namespace Integrative.Lara
             var name = file.Name;
             if (!TryParsePrefix(name, GlobalConstants.FilePrefix, out var id)) return;
             if (document.TryGetElementById(id, out var element)
-                && element is InputElement input)
+                && element is HtmlInputElement input)
             {
                 input.AddFile(file);
             }
@@ -228,7 +228,7 @@ namespace Integrative.Lara
         {
             if (name.StartsWith(prefix, StringComparison.InvariantCulture))
             {
-                elementId = name.Substring(prefix.Length);
+                elementId = name[prefix.Length..];
                 return true;
             }
 
@@ -253,7 +253,7 @@ namespace Integrative.Lara
             {
                 await SendAjaxReply(post.Http, json);
             }
-            EventComplete?.Invoke(post.Http, EventArgs);
+            EventComplete?.Invoke(post.Http, _EventArgs);
             return result;
         }
 

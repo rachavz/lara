@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -30,21 +30,6 @@ namespace Integrative.Lara.Tests.Delta
         }
 
         [Fact]
-        public void IdRemoved()
-        {
-            var doc = CreateDocument();
-            var div = Element.Create("div", "mydiv");
-            doc.Body.AppendChild(div);
-            doc.OpenEventQueue();
-            div.Id = null;
-            var queue = doc.GetQueue();
-            Assert.Single(queue);
-            var step = queue.Peek() as AttributeRemovedDelta;
-            Assert.Equal("id", step!.Attribute);
-            Assert.Equal("mydiv", step.ElementId);
-        }
-
-        [Fact]
         public void UnchangedIdNoSteps()
         {
             var doc = CreateDocument();
@@ -70,22 +55,6 @@ namespace Integrative.Lara.Tests.Delta
             Assert.NotNull(step);
             Assert.Equal("mydiv", step!.ElementId);
             Assert.Equal("x", step.Value);
-        }
-
-        [Fact]
-        public void EditAttributeClearId()
-        {
-            var div = Element.Create("div", "mydiv");
-            var doc = CreateDocument();
-            doc.Body.AppendChild(div);
-            doc.OpenEventQueue();
-            div.SetAttribute("id", null);
-            var queue = doc.GetQueue();
-            Assert.NotEmpty(queue);
-            var step = queue.Peek() as AttributeRemovedDelta;
-            Assert.NotNull(step);
-            Assert.Equal("mydiv", step!.ElementId);
-            Assert.Equal("id", step.Attribute);
         }
 
         private static Document CreateDocument()
@@ -121,7 +90,7 @@ namespace Integrative.Lara.Tests.Delta
         [Fact]
         public void ToggleClassToggles()
         {
-            var button = new Button();
+            var button = new HtmlButtonElement();
             button.ToggleClass("red", true);
             Assert.True(button.HasClass("red"));
             button.ToggleClass("red", false);

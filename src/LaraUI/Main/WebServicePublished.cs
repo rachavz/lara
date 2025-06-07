@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 6/2019
 Author: Pablo Carbonell
 */
@@ -13,7 +13,7 @@ namespace Integrative.Lara
     internal sealed class WebServicePublished : IPublishedItem
     {
         public Func<IWebService> Factory { get; }
-        public string ContentType { get; }
+        private string ContentType { get; }
 
         public WebServicePublished(WebServiceContent content)
         {

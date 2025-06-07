@@ -1,12 +1,12 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
 
 using Microsoft.AspNetCore.Hosting;
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel;
 using System.Resources;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace Integrative.Lara
 {
     /// <summary>
-    /// The main Lara static class
+    /// The main Lara static class  
     /// </summary>
     // ReSharper disable once InconsistentNaming
     public static class LaraUI
@@ -30,12 +30,14 @@ namespace Integrative.Lara
         /// Defines default error pages
         /// </summary>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static ErrorPages ErrorPages => DefaultApplication.ErrorPages;
 
         /// <summary>
         /// Removes all published elements
         /// </summary>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void ClearAll() => DefaultApplication.ClearAllPublished();
 
         /// <summary>
@@ -44,6 +46,7 @@ namespace Integrative.Lara
         /// <param name="address">The URL address of the page.</param>
         /// <param name="pageFactory">Handler that creates instances of the page</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void Publish(string address, Func<IPage> pageFactory)
             => DefaultApplication.PublishPage(address, pageFactory);
 
@@ -53,6 +56,7 @@ namespace Integrative.Lara
         /// <param name="address">The URL address of the content.</param>
         /// <param name="content">The static content to be published.</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void Publish(string address, StaticContent content)
             => DefaultApplication.PublishFile(address, content);
 
@@ -61,6 +65,7 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="content">Web service settings</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void Publish(WebServiceContent content)
             => DefaultApplication.PublishService(content);
 
@@ -69,6 +74,7 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="path">The path.</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void UnPublish(string path)
             => DefaultApplication.UnPublish(path);
 
@@ -76,6 +82,7 @@ namespace Integrative.Lara
         /// Publishes all classes marked with the attributes [LaraPage] and [LaraWebService]
         /// </summary>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void PublishAssemblies()
             => AssembliesReader.LoadAssemblies(DefaultApplication);
 
@@ -85,6 +92,7 @@ namespace Integrative.Lara
         /// <param name="address">The URL address of the web service</param>
         /// <param name="method">The HTTP method of the web service</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void UnPublish(string address, string method)
             => DefaultApplication.UnPublish(address, method);
 
@@ -94,6 +102,7 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="options">Web component publush options</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void Publish(WebComponentOptions options)
             => DefaultApplication.PublishComponent(options);
 
@@ -102,6 +111,7 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="tagName">Tag name to unpublish</param>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void UnPublishWebComponent(string tagName)
             => DefaultApplication.UnPublishWebComponent(tagName);
 
@@ -149,6 +159,7 @@ namespace Integrative.Lara
         /// </summary>
         /// <returns>Task</returns>
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Task<IWebHost> StartServer()
             => StartServer(new StartServerOptions());
 
@@ -159,6 +170,7 @@ namespace Integrative.Lara
         /// <returns>Task</returns>
         // ReSharper disable once MemberCanBePrivate.Global
         [Obsolete(PublishObsolete)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static async Task<IWebHost> StartServer(StartServerOptions options)
         {
             await DefaultApplication.Start(options);
@@ -184,7 +196,6 @@ namespace Integrative.Lara
         /// </summary>
         /// <param name="host">The host.</param>
         /// <returns>string with URL</returns>
-        [SuppressMessage("Design", "CA1055:Uri return values should not be strings", Justification = "Source of information is string")]
         // ReSharper disable once InconsistentNaming
         public static string GetFirstURL(IWebHost host)
         {
@@ -198,21 +209,17 @@ namespace Integrative.Lara
         // ReSharper disable once InconsistentNaming
         public static LaraJson JSON { get; } = new LaraJson();
 
+        /// <summary>
+        /// Flushes page modifications to the client on long-running events. Useful to report progress.
+        /// </summary>
+        public static Task FlushPartialChanges()
+        {
+            return Page.Navigation.FlushPartialChanges();
+        }
+
         #endregion
 
         #region Internal tools
-
-        internal static bool TryGetComponent(string tagName, [NotNullWhen(true)] out Type? type)
-        {
-            var context = InternalContext.Value;
-            if (context?.Application != null)
-            {
-                return Context.Application.TryGetComponent(tagName, out type);
-            }
-
-            type = default;
-            return false;
-        }
 
         /// <summary>
         /// Shorthand for LaraUI.JSON.Parse(LaraUI.Service.RequestBody)

@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -12,7 +12,7 @@ namespace Integrative.Lara
     /// <summary>
     /// A text node.
     /// </summary>
-    /// <seealso cref="Integrative.Lara.Node" />
+    /// <seealso cref="Node" />
     public sealed class TextNode : Node
     {
         /// <summary>

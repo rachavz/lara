@@ -1,11 +1,12 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
 
 using Microsoft.AspNetCore.Http;
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace Integrative.Lara
@@ -40,7 +41,7 @@ namespace Integrative.Lara
         /// Bridge to execute JavaScript on the client
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        IJSBridge JSBridge { get; }
+        IJsBridge JSBridge { get; }
 
         /// <summary>
         /// Methods related to navigation
@@ -57,7 +58,7 @@ namespace Integrative.Lara
     /// Bridge to execute JavaScript on the client
     /// </summary>
     // ReSharper disable once InconsistentNaming
-    public interface IJSBridge
+    public interface IJsBridge
     {
         /// <summary>
         /// Submits the specified java script code to execute on the client. The code is executed after the current event finishes on the server and control returns to the client.
@@ -72,6 +73,7 @@ namespace Integrative.Lara
         /// <param name="messageId">Message type identifier</param>
         /// <param name="handler">The handler for the event.</param>
         [Obsolete("Use instead AddMessageListener() and RemoveMessageListener().")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         void OnMessage(string messageId, Func<Task> handler);
 
         /// <summary>

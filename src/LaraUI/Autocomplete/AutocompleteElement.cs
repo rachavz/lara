@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 11/2019
 Author: Pablo Carbonell
 */
@@ -11,7 +11,6 @@ namespace Integrative.Lara
     /// <summary>
     /// Autocomplete web component
     /// </summary>
-    [LaraWebComponent(CustomTag)]
     public class AutocompleteElement : WebComponent
     {
         /// <summary>
@@ -22,7 +21,7 @@ namespace Integrative.Lara
         /// <summary>
         /// Returns the inner input element
         /// </summary>
-        public InputElement InnerInput { get; } = new InputElement();
+        public HtmlInputElement InnerInput { get; } = new HtmlInputElement();
 
         /// <summary>
         /// Constructor
@@ -31,6 +30,15 @@ namespace Integrative.Lara
         {
             InnerInput.Autocomplete = "off";
             ShadowRoot.AppendChild(InnerInput);
+        }
+
+        /// <summary>
+        /// Input element's class
+        /// </summary>
+        public override string? Class
+        {
+            get => InnerInput.Class;
+            set => InnerInput.Class = value;
         }
 
         private bool _pending, _applied;
@@ -98,7 +106,7 @@ namespace Integrative.Lara
             var payload = new AutocompletePayload
             {
                 AutoFocus = options.AutoFocus,
-                ElementId = InnerInput.EnsureElementId(),
+                ElementId = InnerInput.Id,
                 MinLength = options.MinLength,
                 Strict = options.Strict
             };
@@ -109,7 +117,7 @@ namespace Integrative.Lara
 
         private string GetAutocompleteKey(Document document)
         {
-            return InnerInput.EnsureElementId() + " " + document.VirtualIdString;
+            return InnerInput.Id + " " + document.VirtualIdString;
         }
 
         private void DestroyAutocomplete()

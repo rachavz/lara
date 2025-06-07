@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -31,7 +31,7 @@ namespace Integrative.Lara
             {
                 document.Enqueue(new NodeInsertedDelta
                 {
-                    ParentElementId = parent.EnsureElementId(),
+                    ParentElementId = parent.Id,
                     Index = index,
                     Node = node.GetContentNode()
                 });

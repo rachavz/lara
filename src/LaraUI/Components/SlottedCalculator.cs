@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 8/2019
 Author: Pablo Carbonell
 */
@@ -25,12 +25,7 @@ namespace Integrative.Lara
         internal static bool IsParentSlotting(Node node)
         {
             var parent = node.ParentElement;
-            if (parent == null)
-            {
-                return false;
-            }
-
-            if (parent is Slot)
+            if (parent == null || parent is Slot)
             {
                 return false;
             }

@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -27,7 +27,7 @@ namespace Integrative.Lara
     /// <summary>
     /// An abstract class that represents a node in an HTML5 document
     /// </summary>
-    public abstract class Node
+    public abstract class Node : BindableBase
     {
         /// <summary>
         /// Creates a node

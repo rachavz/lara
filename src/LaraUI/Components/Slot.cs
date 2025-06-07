@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 8/2019
 Author: Pablo Carbonell
 */
@@ -56,7 +56,7 @@ namespace Integrative.Lara
                 return false;
             }
 
-            if (!(parent is Shadow shadow)) return TryFindParentComponent(parent, out component);
+            if (parent is not Shadow shadow) return TryFindParentComponent(parent, out component);
             component = shadow.ParentComponent;
             return true;
             // ReSharper disable once TailRecursiveCall

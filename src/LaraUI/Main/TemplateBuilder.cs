@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -10,22 +10,16 @@ namespace Integrative.Lara
 {
     internal static class TemplateBuilder
     {
-        private static readonly string LibraryUrl;
+        private static readonly string _LibraryUrl;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Required behavior")]
         static TemplateBuilder()
         {
-            LibraryUrl = ClientLibraryHandler.GetLibraryPath();
+            _LibraryUrl = ClientLibraryHandler.GetLibraryPath();
         }
 
         public static void Build(Document document, double keepAliveInterval)
         {
             var head = document.Head;
-            var body = document.Body;
-
-            // ensure ids
-            head.EnsureElementId();
-            body.EnsureElementId();
 
             // lang
             document.Lang = "en";
@@ -36,9 +30,9 @@ namespace Integrative.Lara
             head.AppendChild(meta);
 
             // LaraClient.js
-            var script = new Script
+            var script = new HtmlScriptElement
             {
-                Src = LibraryUrl,
+                Src = _LibraryUrl,
                 Defer = true
             };
             head.AppendChild(script);

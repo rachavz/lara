@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 11/2019
 Author: Pablo Carbonell
 */
@@ -13,8 +13,8 @@ namespace Integrative.Lara
 {
     internal class KeepAliveHandler : BaseHandler
     {
-        private static readonly Task<bool> TaskFalse = Task.FromResult(false);
-        private static readonly Task<bool> TaskTrue = Task.FromResult(true);
+        private static readonly Task<bool> _TaskFalse = Task.FromResult(false);
+        private static readonly Task<bool> _TaskTrue = Task.FromResult(true);
 
         private const string EventPrefix = "/_keepAlive";
         private const string AjaxMethod = "POST";
@@ -30,10 +30,10 @@ namespace Integrative.Lara
         {
             if (!IsMatch(http))
             {
-                return TaskFalse;
+                return _TaskFalse;
             }
             TryGetDocument(http, out _);
-            return TaskTrue;
+            return _TaskTrue;
         }
 
         private static bool IsMatch(HttpContext http)

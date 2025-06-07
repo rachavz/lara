@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 11/2019
 Author: Pablo Carbonell
 */
@@ -19,12 +19,11 @@ namespace Integrative.Lara
         public string Term { get; set; } = string.Empty;
     }
 
-    [LaraWebService(Address = Address)]
     internal class AutocompleteService : IWebService
     {
-        private const string Address = "/lara_autocomplete";
+        public const string Address = "/lara_autocomplete";
 
-        private static readonly AutocompleteRegistry Map = new AutocompleteRegistry();
+        private static readonly AutocompleteRegistry _Map = new AutocompleteRegistry();
 
         public Task<string> Execute()
         {
@@ -34,7 +33,7 @@ namespace Integrative.Lara
         internal static async Task<string> Execute(string json)
         {
             var request = LaraUI.JSON.Parse<AutocompleteRequest>(json);
-            if (!Map.TryGet(request.Key, out var element))
+            if (!_Map.TryGet(request.Key, out var element))
             {
                 return string.Empty;
             }
@@ -50,14 +49,14 @@ namespace Integrative.Lara
 
         public static void Register(string key, AutocompleteElement element)
         {
-            Map.Set(key, element);
+            _Map.Set(key, element);
         }
 
         public static void Unregister(string key)
         {
-            Map.Remove(key);
+            _Map.Remove(key);
         }
 
-        public static int RegisteredCount => Map.Count;
+        public static int RegisteredCount => _Map.Count;
     }
 }

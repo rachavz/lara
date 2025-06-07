@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 9/2019
 Author: Pablo Carbonell
 */
@@ -56,7 +56,7 @@ namespace Integrative.Lara
             else
             {
                 _storage.Add(document, value);
-                document.UnloadComplete += (sender, args) => _storage.Remove(document);
+                document.UnloadComplete += (_, _) => _storage.Remove(document);
             }
         }
 

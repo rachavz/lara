@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 10/2019
 Author: Pablo Carbonell
 */
@@ -40,6 +40,13 @@ namespace Integrative.Lara
             _published = new Published();
             ErrorPages = new ErrorPages(_published);
             ErrorPages.PublishErrorImage();
+            PublishService(new WebServiceContent
+            {
+                Address = AutocompleteService.Address,
+                ContentType = "application/json",
+                Method = "POST",
+                Factory = () => new AutocompleteService()
+            });
         }
 
         internal Published GetPublished() => _published;
@@ -65,9 +72,17 @@ namespace Integrative.Lara
         #region Publishing
 
         /// <summary>
+        /// Publishes a page with a component
+        /// </summary>
+        /// <param name="address">The URL address of the page</param>
+        /// <param name="nodeFactory">Handler that creates instances of the component</param>
+        public void PublishPage(string address, Func<Node> nodeFactory)
+            => _published.Publish(address, new PagePublished(() => new SingleElementPage(nodeFactory)));
+
+        /// <summary>
         /// Publishes a page.
         /// </summary>
-        /// <param name="address">The URL address of the page.</param>
+        /// <param name="address">The URL address of the page</param>
         /// <param name="pageFactory">Handler that creates instances of the page</param>
         public void PublishPage(string address, Func<IPage> pageFactory)
             => _published.Publish(address, new PagePublished(pageFactory));

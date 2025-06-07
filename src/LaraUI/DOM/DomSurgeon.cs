@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -23,7 +23,6 @@ namespace Integrative.Lara
 
         public void Append(Node child)
         {
-            _parent.EnsureElementId();
             var previous = BeforeOperation(child);
             AppendInternal(child);
             AfterOperation(child, previous);
@@ -31,7 +30,6 @@ namespace Integrative.Lara
 
         public void InsertChildBefore(Node reference, Node child)
         {
-            _parent.EnsureElementId();
             var previous = BeforeOperation(child);
             InsertChild(reference, 0, child);
             AfterOperation(child, previous);
@@ -39,7 +37,6 @@ namespace Integrative.Lara
 
         public void InsertChildAfter(Node reference, Node child)
         {
-            _parent.EnsureElementId();
             var previous = BeforeOperation(child);
             InsertChild(reference, 1, child);
             AfterOperation(child, previous);
@@ -47,7 +44,6 @@ namespace Integrative.Lara
 
         public void InsertChildAt(int index, Node child)
         {
-            _parent.EnsureElementId();
             var previous = BeforeOperation(child);
             InsertChild(index, child);
             AfterOperation(child, previous);
@@ -55,14 +51,12 @@ namespace Integrative.Lara
 
         public void Remove(Node child)
         {
-            _parent.EnsureElementId();
             RemoveInternal(child);
             AfterOperation(child, _parent);
         }
 
         public void RemoveAt(int index)
         {
-            _parent.EnsureElementId();
             var child = _parent.GetChildAt(index);
             RemoveInternal(index);
             AfterOperation(child, _parent);
@@ -70,7 +64,6 @@ namespace Integrative.Lara
 
         public void ClearChildren()
         {
-            _parent.EnsureElementId();
             var list = new List<Node>(_parent.Children);
             ClearChildrenInternal();
             foreach (var node in list)
@@ -131,33 +124,24 @@ namespace Integrative.Lara
 
         private void AppendInternal(Node child)
         {
-            var needGenerateIds = NeedsId(child);
             PreventCycles(child);
-            AddImmediateId(child);
             UpdateDocumentMappings(child);
             UpdateChildParentLinks(child);
-            GenerateIdsIfNeeded(needGenerateIds, child);
         }
 
         private void InsertChild(Node reference, int offset, Node child)
         {
             VerifyParentContainsChild(reference);
-            var needGenerateIds = NeedsId(child);
             PreventCycles(child);
-            AddImmediateId(child);
             UpdateDocumentMappings(child);
             UpdateChildParentLinks(reference, offset, child);
-            GenerateIdsIfNeeded(needGenerateIds, child);
         }
 
         private void InsertChild(int index, Node child)
         {
-            var needGenerateIds = NeedsId(child);
             PreventCycles(child);
-            AddImmediateId(child);
             UpdateDocumentMappings(child);
             UpdateChildParentLinks(index, child);
-            GenerateIdsIfNeeded(needGenerateIds, child);
         }
 
         private void VerifyParentContainsChild(Node reference)
@@ -168,23 +152,23 @@ namespace Integrative.Lara
             }
         }
 
-        private static void GenerateIdsIfNeeded(bool needGenerateIds, Node child)
-        {
-            if (needGenerateIds)
-            {
-                GenerateRequiredIds(child);
-            }
-        }
-
         private void RemoveInternal(Node child)
         {
             if (child.ParentElement != _parent)
             {
                 throw new InvalidOperationException(Resources.NodeNotFoundInsideParent);
             }
-            var index = _parent.GetChildNodePosition(child);
-            RemoveInternalCommon(child);
-            NodeRemovedDelta.Enqueue(_parent, index);
+            if (child is Element childElement)
+            {
+                RemoveElementDelta.Enqueue(childElement);
+                RemoveInternalCommon(child);
+            }
+            else
+            {
+                var index = _parent.GetChildNodePosition(child);
+                RemoveInternalCommon(child);
+                NodeRemovedDelta.Enqueue(_parent, index);
+            }
         }
 
         private void RemoveInternal(int index)
@@ -272,7 +256,7 @@ namespace Integrative.Lara
         private static void CollectElements(ICollection<Node> list, Node node)
         {
             list.Add(node);
-            if (!(node is Element element)) return;
+            if (node is not Element element) return;
             foreach (var child in element.GetAllDescendants())
             {
                 CollectElements(list, child);
@@ -285,7 +269,7 @@ namespace Integrative.Lara
             var hash = new HashSet<string>();
             foreach (var node in list)
             {
-                if (!(node is Element element) || string.IsNullOrEmpty(element.Id)) continue;
+                if (node is not Element element || string.IsNullOrEmpty(element.Id)) continue;
                 var id = element.Id;
                 if (hash.Contains(id) || DuplicateIdInDocument(document, id))
                 {
@@ -351,45 +335,6 @@ namespace Integrative.Lara
             child.ParentElement = _parent;
             child.UpdateSlotted();
             NodeInsertedDelta.Enqueue(child, index);
-        }
-
-        #endregion
-
-        #region Generate IDs for elements with events
-
-        private bool NeedsId(Node child)
-        {
-            return child is Element
-                && child.Document == null
-                && _parent.Document != null;
-        }
-
-        private void AddImmediateId(Node child)
-        {
-            if (child is Element element
-                && ParentRequiresId())
-            {
-                element.EnsureElementId();
-            }
-        }
-
-        private bool ParentRequiresId()
-        {
-            return !_parent.IsPrintable
-                || _parent.TagName == "body";
-        }
-
-        private static void GenerateRequiredIds(Node node)
-        {
-            if (!(node is Element element)) return;
-            if (element.NeedsId)
-            {
-                element.EnsureElementId();
-            }
-            foreach (var child in element.Children)
-            {
-                GenerateRequiredIds(child);
-            }
         }
 
         #endregion

@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 10/2019
 Author: Pablo Carbonell
 */
@@ -31,7 +31,7 @@ namespace Integrative.Lara
         {
             if (!element.TryGetEvents(out var document)) return;
             document.NotifyHasEvent();
-            document.Enqueue(CreateDelta(element.EnsureElementId(), settings));
+            document.Enqueue(CreateDelta(element.Id, settings));
         }
 
         public static void Enqueue(Document document, EventSettings settings)

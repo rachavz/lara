@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -12,7 +12,7 @@ namespace Integrative.Lara
 {
     internal sealed class DiscardParameters
     {
-        public Guid DocumentId { get; set; }
+        public Guid DocumentId { get; private set; }
 
         public static bool TryParse(HttpContext context, [NotNullWhen(true)] out DiscardParameters? parameters)
         {

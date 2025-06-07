@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 9/2019
 Author: Pablo Carbonell
 */
@@ -57,7 +57,7 @@ namespace Integrative.Lara
             else
             {
                 Store(value, session);
-                session.CloseComplete += (sender, args) => _storage.Remove(session);
+                session.CloseComplete += (_, _) => _storage.Remove(session);
             }
         }
 

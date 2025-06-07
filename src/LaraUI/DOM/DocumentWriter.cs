@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -52,7 +52,11 @@ namespace Integrative.Lara
         public void PrintElement(Element element, int indent)
         {
             VerifyNestedLevel(indent);
-            if (IsInlineElement(element))
+            if (!element.Render)
+            {
+                PrintStubElement(element);
+            }
+            else if (IsInlineElement(element))
             {
                 Indent(indent);
                 PrintInlineElement(element);
@@ -92,6 +96,13 @@ namespace Integrative.Lara
             if (HtmlReference.IsSelfClosingTag(element.TagName)) return;
             PrintInlineChildNodes(element);
             PrintClosingTag(element, 0);
+        }
+
+        private void PrintStubElement(Element element)
+        {
+            _builder.Append("<script id=\"");
+            _builder.Append(HttpUtility.HtmlAttributeEncode(element.Id));
+            _builder.Append("\" type=\"placeholder/lara\"></script>");
         }
 
         private void Indent(int indent)

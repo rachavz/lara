@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -52,11 +52,9 @@ namespace Integrative.Lara
 
         private readonly ServerEventsController _serverEvents;
         private readonly MessageRegistry _messageRegistry;
-        private readonly Sequencer _sequencer = new Sequencer();
+        private readonly Sequencer _sequencer = new();
 
-        internal Dictionary<string, EventSettings> Events { get; } = new Dictionary<string, EventSettings>();
-
-        private int _serializer;
+        private Dictionary<string, EventSettings> Events { get; } = new();
 
         /// <summary>
         /// Occurs when the document is unloaded
@@ -66,7 +64,7 @@ namespace Integrative.Lara
         /// <summary>
         /// Asynchronous unload event
         /// </summary>
-        public AsyncEvent OnUnloadAsync { get; } = new AsyncEvent();
+        public AsyncEvent OnUnloadAsync { get; } = new();
 
         internal event EventHandler? UnloadComplete;
 
@@ -84,7 +82,7 @@ namespace Integrative.Lara
         /// <value>
         /// The head.
         /// </value>
-        public HeadElement Head { get; }
+        public HtmlHeadElement Head { get; }
 
         /// <summary>
         /// The document's Body element.
@@ -92,7 +90,7 @@ namespace Integrative.Lara
         /// <value>
         /// The body.
         /// </value>
-        public BodyElement Body { get; }
+        public HtmlBodyElement Body { get; }
 
         internal DateTime LastUtc { get; private set; }
 
@@ -110,17 +108,19 @@ namespace Integrative.Lara
             _map = new DocumentIdMap();
             _queue = new Queue<BaseDelta>();
             Semaphore = new SemaphoreSlim(1);
-            Head = new HeadElement
+            Head = new HtmlHeadElement
             {
                 Document = this,
                 IsSlotted = true
             };
-            Body = new BodyElement
+            OnElementAdded(Head);
+            Body = new HtmlBodyElement
             {
                 Document = this,
                 IsSlotted = true
             };
             UpdateTimestamp();
+            OnElementAdded(Body);
             TemplateBuilder.Build(this, keepAliveInterval);
             _serverEvents = new ServerEventsController(this);
             _messageRegistry = new MessageRegistry(this);
@@ -153,19 +153,13 @@ namespace Integrative.Lara
             LastUtc = value;
         }
 
-        internal string GenerateElementId()
-        {
-            _serializer++;
-            return "_e" + _serializer.ToString(CultureInfo.InvariantCulture);
-        }
-
         internal void OnElementAdded(Element element)
             => _map.NotifyAdded(element);
 
         internal void OnElementRemoved(Element element)
             => _map.NotifyRemoved(element);
 
-        internal void NotifyChangeId(Element element, string? before, string? after)
+        internal void NotifyChangeId(Element element, string before, string after)
             => _map.NotifyChangeId(element, before, after);
 
         internal bool QueueingEvents { get; private set; }
@@ -222,6 +216,7 @@ namespace Integrative.Lara
         /// </summary>
         public bool HasPendingChanges => _queue.Count > 0;
 
+        [Obsolete("Support old methods")]
         internal void OnMessage(string key, Func<Task> handler)
         {
             Head.On("_" + key, handler);

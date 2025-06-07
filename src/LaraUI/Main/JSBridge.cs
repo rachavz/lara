@@ -1,22 +1,22 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
 
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace Integrative.Lara
 {
-    // ReSharper disable once InconsistentNaming
-    internal sealed class JSBridge : IJSBridge
+    internal sealed class JsBridge : IJsBridge
     {
         private readonly PageContext _parent;
 
         public string? EventData { get; internal set; } = string.Empty;
 
-        public JSBridge(PageContext parent)
+        public JsBridge(PageContext parent)
         {
             _parent = parent;
         }
@@ -31,6 +31,7 @@ namespace Integrative.Lara
         }
 
         [Obsolete("Use instead AddMessageListener() and RemoveMessageListener().")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void OnMessage(string key, Func<Task> handler)
         {
             _parent.Document.OnMessage(key, handler);

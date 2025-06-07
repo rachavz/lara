@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -19,12 +19,11 @@ namespace Integrative.Lara
         {
             _element = element;
             _values = new Dictionary<string, string?>();
+            SetAttributeLower("id", element.Id);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
         public bool HasAttribute(string name) => HasAttributeLower(name.ToLowerInvariant());
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "not localizable")]
         public string? GetAttribute(string name) => GetAttributeLower(name.ToLowerInvariant());
 
         internal bool HasAttributeLower(string nameLower)
@@ -55,7 +54,7 @@ namespace Integrative.Lara
             }
             else if (nameLower == "id")
             {
-                SetIdDelta.Enqueue(_element, value);
+                SetIdDelta.Enqueue(_element, value ?? "");
             }
             else
             {
@@ -92,7 +91,7 @@ namespace Integrative.Lara
             if (value == current) return;
             if (value)
             {
-                SetAttributeLower(nameLower, null);
+                SetAttributeLower(nameLower, "");
             }
             else
             {

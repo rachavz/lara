@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 10/2019
 Author: Pablo Carbonell
 */
@@ -66,7 +66,7 @@ namespace Integrative.Lara.Tests.DOM
         {
             var context = new Mock<IPageContext>();
             LaraUI.InternalContext.Value = context.Object;
-            var bridge = new Mock<IJSBridge>();
+            var bridge = new Mock<IJsBridge>();
             context.Setup(x => x.JSBridge).Returns(bridge.Object);
             bridge.Setup(x => x.EventData).Returns("test");
             context.Setup(x => x.Application).Returns(Context.Application);
@@ -102,6 +102,7 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
+        [Obsolete("old methods")]
         public void DocumentOnMessageRuns()
         {
             CreateMessageContext();

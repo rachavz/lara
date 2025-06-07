@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -34,7 +34,7 @@ namespace Integrative.Lara
     public class LaraOptions
     {
         /// <summary>
-        /// When set to true, upon starting the application the assemblies will be scanned for classes decorated with 'Lara' attributes and publish them.
+        /// Looks for classes decorated with Lara attributes and registers them. Default is True.
         /// </summary>
         public bool PublishAssembliesOnStart { get; set; }
 

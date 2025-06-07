@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2019-2020 Integrative Software LLC
+Copyright (c) 2019-2021 Integrative Software LLC
 Created: 5/2019
 Author: Pablo Carbonell
 */
@@ -8,6 +8,7 @@ using Integrative.Lara.Tests.Main;
 using Integrative.Lara.Tests.Middleware;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -222,20 +223,38 @@ namespace Integrative.Lara.Tests.DOM
         }
 
         [Fact]
-        public void RemoveNode()
+        public void RemoveTextNode()
         {
             var div = Element.Create("div", "mydiv");
             var doc = CreateDocument();
             doc.Body.AppendChild(new TextNode("hi"));
             doc.Body.AppendChild(div);
+            doc.Body.AppendChild(new TextNode("bye"));
             doc.OpenEventQueue();
-            div.Remove();
+            doc.Body.RemoveAt(2);
             var queue = doc.GetQueue();
             Assert.NotEmpty(queue);
             var step = queue.Peek() as NodeRemovedDelta;
             Assert.NotNull(step);
             Assert.Equal(doc.Body.Id, step!.ParentId);
-            Assert.Equal(1, step.ChildIndex);
+            Assert.Equal(2, step.ChildIndex);
+        }
+
+        [Fact]
+        public void RemoveElement()
+        {
+            var div = Element.Create("div", "mydiv");
+            var doc = CreateDocument();
+            doc.Body.AppendChild(new TextNode("hi"));
+            doc.Body.AppendChild(div);
+            doc.Body.AppendChild(new TextNode("bye"));
+            doc.OpenEventQueue();
+            div.Remove();
+            var queue = doc.GetQueue();
+            Assert.NotEmpty(queue);
+            var step = queue.Peek() as RemoveElementDelta;
+            Assert.NotNull(step);
+            Assert.Equal(div.Id, step?.ElementId);
         }
 
         [Fact]
@@ -253,7 +272,7 @@ namespace Integrative.Lara.Tests.DOM
             var content = step.Node as ContentElementNode;
             Assert.NotNull(content);
             Assert.Equal("div", content!.TagName);
-            Assert.NotEmpty(content.Attributes);
+            Assert.NotNull(content.Attributes?.FirstOrDefault());
             var att = content.Attributes![0];
             Assert.Equal("id", att.Attribute);
             Assert.Equal("mydiv", att.Value);
@@ -277,28 +296,10 @@ namespace Integrative.Lara.Tests.DOM
             var content = step.Node as ContentElementNode;
             Assert.NotNull(content);
             Assert.Equal("div", content!.TagName);
-            Assert.NotEmpty(content.Attributes);
+            Assert.NotNull(content.Attributes?.FirstOrDefault());
             var att = content.Attributes![0];
             Assert.Equal("id", att.Attribute);
             Assert.Equal("mydiv", att.Value);
-        }
-
-        [Fact]
-        public void SetIdOnAttribute()
-        {
-            var div1 = Element.Create("div");
-            var div2 = Element.Create("div");
-            var doc = CreateDocument();
-            doc.Body.AppendChild(div1);
-            div1.AppendChild(div2);
-            doc.OpenEventQueue();
-            div2.SetAttribute("data-test", "x");
-            var queue = doc.GetQueue();
-            Assert.NotEmpty(queue);
-            var step = queue.Peek() as SetIdDelta;
-            Assert.NotNull(step);
-            Assert.Equal(div1.Id, step!.Locator!.StartingId);
-            Assert.Equal(div2.Id, step.NewId);
         }
 
         [Fact]
@@ -404,7 +405,7 @@ namespace Integrative.Lara.Tests.DOM
         {
             var counter = 0;
             var document = new Document(new MyPage(), BaseModeController.DefaultKeepAliveInterval);
-            document.OnUnload += (sender, args) => counter++;
+            document.OnUnload += (_, _) => counter++;
             await document.NotifyUnload();
             Assert.Equal(1, counter);
         }
@@ -440,11 +441,11 @@ namespace Integrative.Lara.Tests.DOM
         [Fact]
         public void InputNotifyValueUpdates()
         {
-            var input = new InputElement();
+            var input = new HtmlInputElement();
             input.NotifyValue(new ElementEventValue
             {
                 Checked = true,
-                ElementId = input.EnsureElementId(),
+                ElementId = input.Id,
                 Value = "a"
             });
             Assert.True(input.Checked);
@@ -582,8 +583,8 @@ namespace Integrative.Lara.Tests.DOM
         public void ElementGetHtml()
         {
             var div = Element.Create("div");
-            var html = div.GetHtml();
-            Assert.StartsWith("<div></div>", html);
+            var html = div.GetHtml().Replace('\r', ' ').Replace('\n', ' ').Trim();
+            Assert.Equal($"<div id=\"{div.Id}\"></div>", html);
         }
 
         [Fact]
@@ -597,16 +598,16 @@ namespace Integrative.Lara.Tests.DOM
             Assert.Single(q);
             var first = q.Peek() as FocusDelta;
             Assert.NotNull(first);
-            Assert.Equal(div.EnsureElementId(), first!.ElementId);
+            Assert.Equal(div.Id, first!.ElementId);
         }
 
         [Fact]
         public void ButtonNotifyValue()
         {
-            var x = new Button();
+            var x = new HtmlButtonElement();
             x.NotifyValue(new ElementEventValue
             {
-                ElementId = x.EnsureElementId(),
+                ElementId = x.Id,
                 Value = "test"
             });
             Assert.Equal("test", x.GetAttribute("value"));
